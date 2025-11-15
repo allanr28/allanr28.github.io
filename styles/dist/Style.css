@@ -1,0 +1,129 @@
+#main-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.container-80 {
+  width: 80%;
+  height: auto;
+}
+.container-80 h3 {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 2em;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  margin-bottom: 40px;
+}
+
+#todo-input {
+  width: 100%;
+  height: 7%;
+  margin-top: 20px;
+  display: flex;
+}
+#todo-input input[type=text] {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  width: 85%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  height: 50px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  background-color: #ecebeb;
+  padding-left: 20px;
+}
+#todo-input #submit {
+  width: 20%;
+  height: 50px;
+  margin-left: -20px;
+  border: none;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  text-align: center;
+  line-height: 50px;
+  background-color: #fe653f;
+  color: white;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+#todo-input #submit:hover {
+  cursor: pointer;
+  background-color: #fa7857;
+}
+
+#filters {
+  width: 100%;
+  height: 50px;
+  display: flex;
+  justify-content: flex-end;
+}
+#filters i {
+  align-self: flex-end;
+  padding-bottom: 10px;
+}
+#filters i:hover {
+  cursor: pointer;
+}
+
+#task-container {
+  height: 500px;
+  overflow: auto;
+  width: 100%;
+}
+#task-container .task {
+  height: 50px;
+  width: 100%;
+  background-color: #dddddd;
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: row;
+  border-radius: 3px;
+  padding-left: 10px;
+}
+#task-container .task p {
+  width: 87%;
+  height: auto;
+  display: block;
+  padding-left: 5px;
+  line-height: 50px;
+}
+#task-container .task .delete-task {
+  width: 7%;
+  height: auto;
+  background-color: #f5476a;
+  color: white;
+  display: block;
+  text-align: center;
+  line-height: 50px;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  float: right;
+}
+#task-container .task .delete-task:hover {
+  cursor: pointer;
+  background-color: #fa6784;
+}
+#task-container .task .complete-task {
+  width: 7%;
+  height: auto;
+  background-color: #00c55c;
+  color: white;
+  display: block;
+  text-align: center;
+  line-height: 50px;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  float: right;
+}
+#task-container .task .complete-task:hover {
+  cursor: pointer;
+  background-color: #00aa4f;
+}
