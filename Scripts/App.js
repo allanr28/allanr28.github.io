@@ -33,6 +33,25 @@ function loadNoteIntoEditor() {
   editor.textContent = selectedNote.body;     // ✅ contenteditable uses textContent
 }
 
+titleInput.addEventListener("input", () => {
+    const note = notes.find(n => n.id === selectedNoteId);
+    if (!note) return;
+
+    note.title = titleInput.value;
+    note.lastEdited = Date.now();
+    UpdateNotePreviewList(notes);
+});
+
+editor.addEventListener("input", () => {
+    const note = notes.find(n => n.id === selectedNoteId);
+    if (!note) return;
+
+    note.body = editor.textContent;
+    note.lastEdited = Date.now();
+    UpdateNotePreviewList(notes);
+});
+
+
 
 function createNotePreview(note) {
     // Outer container
