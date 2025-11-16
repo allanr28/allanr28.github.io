@@ -45,6 +45,10 @@
             border-bottom: 1px solid lightblue;
             margin-top: 5px;
             padding: 20px;
+            &:hover{
+                cursor: pointer;
+                outline: 1px solid turquoise;
+            }
             span{
                 display: flex;
             }
@@ -77,10 +81,45 @@
         #editor{
             margin: 0 auto;
             margin-top: 5px; 
-            height: 85%;
+            height: 80%;
             width: 95%;
+            outline: none;
+            padding: 2px; 
+            border: 1px solid lightgray;
+            border-radius: 3px;
         }
     }
+}
+
+#new-note {
+  position: fixed;   
+  left: 20px;       
+  bottom: 20px;      
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: black;
+  color: white;
+  cursor: pointer;
+  font-size: 2em;
+}
+
+#save-note {
+  position: fixed;   
+  right: 20px;       
+  bottom: 20px;      
+  width: 120px;
+  height: 50px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: green;
+  color: white;
+  cursor: pointer;
 }
 
 

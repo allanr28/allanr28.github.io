@@ -5,6 +5,8 @@ var selectedNoteId;
 var titleInput = document.querySelector('#note-title input');
 var editor = document.querySelector('#editor');
 var previewContainer = document.querySelector('#note-preview-container');
+var newNoteBtn = document.getElementById("new-note");
+var saveNoteBtn = document.getElementById("save-note");
 
 function AddNote(title, text) {
   var newNote = {
@@ -14,6 +16,7 @@ function AddNote(title, text) {
     lastEdited: Date.now()
   };
   notes.push(newNote);
+  selectedNoteId = newNote.id;
   UpdateNotePreviewList(notes);
 }
 
@@ -28,12 +31,23 @@ function loadNoteIntoEditor() {
   var selectedNote = notes.find(function (note) {
     return note.id === selectedNoteId;
   });
-  if (!selectedNote) return; // guard against undefined
+  if (!selectedNote) return;
+  titleInput.value = selectedNote.title;
+  editor.textContent = selectedNote.body;
+} //new note button
 
-  titleInput.value = selectedNote.title; // ✅ input uses value
 
-  editor.textContent = selectedNote.body; // ✅ contenteditable uses textContent
-}
+newNoteBtn.addEventListener("click", function (event) {
+  selectedNoteId = null;
+  titleInput.value = "";
+  editor.textContent = "";
+  titleInput.focus();
+}); //save note button
+
+saveNoteBtn.addEventListener("click", function (event) {
+  if (selectedNoteId != null) return;
+  AddNote(titleInput.value, editor.textContent);
+}); //update not preview title
 
 titleInput.addEventListener("input", function () {
   var note = notes.find(function (n) {
@@ -43,7 +57,8 @@ titleInput.addEventListener("input", function () {
   note.title = titleInput.value;
   note.lastEdited = Date.now();
   UpdateNotePreviewList(notes);
-});
+}); //update note preview body and date. 
+
 editor.addEventListener("input", function () {
   var note = notes.find(function (n) {
     return n.id === selectedNoteId;
@@ -55,24 +70,18 @@ editor.addEventListener("input", function () {
 });
 
 function createNotePreview(note) {
-  // Outer container
   var noteEl = document.createElement("div");
-  noteEl.classList.add("note-preview"); // Title
-
+  noteEl.classList.add("note-preview");
   var title = document.createElement("div");
   title.classList.add("title");
-  title.textContent = note.title; // Span wrapper
-
-  var span = document.createElement("span"); // Time
-
+  title.textContent = note.title;
+  var span = document.createElement("span");
   var time = document.createElement("div");
   time.classList.add("time");
-  time.textContent = new Date(note.lastEdited).toLocaleTimeString(); // Text
-
+  time.textContent = new Date(note.lastEdited).toLocaleTimeString();
   var text = document.createElement("div");
   text.classList.add("text");
-  text.textContent = note.body; // Build the tree
-
+  text.textContent = note.body;
   span.appendChild(time);
   span.appendChild(text);
   noteEl.appendChild(title);
@@ -83,8 +92,3 @@ function createNotePreview(note) {
   });
   previewContainer.appendChild(noteEl);
 }
-
-AddNote("First note", "This is the body of my first note");
-AddNote("Second note", "Another test note");
-selectedNoteId = notes[0].id;
-loadNoteIntoEditor();
