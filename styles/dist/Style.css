@@ -47,6 +47,9 @@
   margin-top: 5px;
   padding: 20px;
 }
+#side-bar #note-preview-container .note-preview.selected {
+  background-color: #e6f7ff;
+}
 #side-bar #note-preview-container .note-preview:hover {
   cursor: pointer;
   outline: 1px solid turquoise;
@@ -119,4 +122,10 @@
   background: green;
   color: white;
   cursor: pointer;
+}
+#save-note.disabled {
+  background: gray;
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
 }

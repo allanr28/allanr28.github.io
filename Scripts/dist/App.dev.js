@@ -7,6 +7,7 @@ var editor = document.querySelector('#editor');
 var previewContainer = document.querySelector('#note-preview-container');
 var newNoteBtn = document.getElementById("new-note");
 var saveNoteBtn = document.getElementById("save-note");
+var isNewNoteDirty = false;
 
 function AddNote(title, text) {
   var newNote = {
@@ -17,8 +18,10 @@ function AddNote(title, text) {
   };
   notes.push(newNote);
   selectedNoteId = newNote.id;
+  isNewNoteDirty = false;
   saveNotesToStorage();
   UpdateNotePreviewList(notes);
+  updateSaveButtonState();
 }
 
 function UpdateNotePreviewList(list) {
@@ -35,6 +38,17 @@ function loadNoteIntoEditor() {
   if (!selectedNote) return;
   titleInput.value = selectedNote.title;
   editor.textContent = selectedNote.body;
+}
+
+function updateSaveButtonState() {
+  var canSave = selectedNoteId === null && isNewNoteDirty;
+  saveNoteBtn.classList.toggle("disabled", !canSave);
+
+  if (!canSave) {
+    saveNoteBtn.setAttribute("aria-disabled", "true");
+  } else {
+    saveNoteBtn.removeAttribute("aria-disabled");
+  }
 }
 
 function saveNotesToStorage() {
@@ -56,46 +70,70 @@ function loadNotesFromStorage() {
   selectedNoteId = notes[0].id;
   UpdateNotePreviewList(notes);
   loadNoteIntoEditor();
+  updateSaveButtonState();
 } //new note button
 
 
 newNoteBtn.addEventListener("click", function (event) {
   selectedNoteId = null;
+  isNewNoteDirty = false;
   titleInput.value = "";
   editor.textContent = "";
   titleInput.focus();
+  UpdateNotePreviewList(notes);
+  updateSaveButtonState();
 }); //save note button
 
 saveNoteBtn.addEventListener("click", function (event) {
-  if (selectedNoteId != null) return;
+  if (selectedNoteId != null || !isNewNoteDirty) return;
   AddNote(titleInput.value, editor.textContent);
+  updateSaveButtonState();
 }); //update not preview title
 
 titleInput.addEventListener("input", function () {
   var note = notes.find(function (n) {
     return n.id === selectedNoteId;
   });
-  if (!note) return;
+
+  if (!note) {
+    isNewNoteDirty = true;
+    updateSaveButtonState();
+    return;
+  }
+
   note.title = titleInput.value;
   note.lastEdited = Date.now();
   saveNotesToStorage();
   UpdateNotePreviewList(notes);
+  updateSaveButtonState();
 }); //update note preview body and date. 
 
 editor.addEventListener("input", function () {
   var note = notes.find(function (n) {
     return n.id === selectedNoteId;
   });
-  if (!note) return;
+
+  if (!note) {
+    isNewNoteDirty = true;
+    updateSaveButtonState();
+    return;
+  }
+
   note.body = editor.textContent;
   note.lastEdited = Date.now();
   saveNotesToStorage();
   UpdateNotePreviewList(notes);
+  updateSaveButtonState();
 });
 
 function createNotePreview(note) {
   var noteEl = document.createElement("div");
   noteEl.classList.add("note-preview");
+
+  if (note.id === selectedNoteId) {
+    noteEl.classList.add("selected");
+  }
+
   var title = document.createElement("div");
   title.classList.add("title");
   title.textContent = note.title;
@@ -112,9 +150,13 @@ function createNotePreview(note) {
   noteEl.appendChild(span);
   noteEl.addEventListener("click", function () {
     selectedNoteId = note.id;
+    isNewNoteDirty = false;
     loadNoteIntoEditor();
+    UpdateNotePreviewList(notes);
+    updateSaveButtonState();
   });
   previewContainer.appendChild(noteEl);
 }
 
 loadNotesFromStorage();
+updateSaveButtonState();
