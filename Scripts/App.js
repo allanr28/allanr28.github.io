@@ -11,7 +11,57 @@ const searchInput = document.querySelector('#note-search');
 const newNoteBtn = document.getElementById("new-note");
 const saveNoteBtn = document.getElementById("save-note");
 const deleteNoteBtn = document.getElementById("delete-note");
+const closeEditorBtn = document.getElementById("close-editor");
 let isNewNoteDirty = false;
+const mobileLayoutQuery = window.matchMedia("(max-width: 600px)");
+let isMobileLayout = mobileLayoutQuery.matches;
+
+function generateId() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID();
+    }
+    if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        // Set RFC4122 variant/version bits
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        return Array.from(bytes, b => b.toString(16).padStart(2, "0"))
+            .join("")
+            .replace(/^(.{8})(.{4})(.{4})(.{4})(.+)$/, "$1-$2-$3-$4-$5");
+    }
+    // Last-resort fallback
+    return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function syncMobileLayoutState() {
+    document.body.classList.toggle("mobile-layout", isMobileLayout);
+    if (!isMobileLayout) {
+        document.body.classList.remove("mobile-editor-open");
+    }
+}
+
+function handleMobileLayoutChange(event) {
+    isMobileLayout = event.matches;
+    syncMobileLayoutState();
+}
+
+function openMobileEditor() {
+    if (!isMobileLayout) return;
+    document.body.classList.add("mobile-editor-open");
+}
+
+function closeMobileEditor() {
+    if (!isMobileLayout) return;
+    document.body.classList.remove("mobile-editor-open");
+}
+
+syncMobileLayoutState();
+if (typeof mobileLayoutQuery.addEventListener === "function") {
+    mobileLayoutQuery.addEventListener("change", handleMobileLayoutChange);
+} else if (typeof mobileLayoutQuery.addListener === "function") {
+    mobileLayoutQuery.addListener(handleMobileLayoutChange);
+}
 
 function getPlainTextFromHTML(html = "") {
     const temp = document.createElement("div");
@@ -21,7 +71,7 @@ function getPlainTextFromHTML(html = "") {
 
 function AddNote(title, html){
     const newNote = {
-        id: crypto.randomUUID(),  
+        id: generateId(),  
         title: title,
         body: html || "",
         lastEdited: Date.now()
@@ -36,6 +86,7 @@ function AddNote(title, html){
     }
     renderNotes();
     updateSaveButtonState();
+    closeMobileEditor();
    
 }
 
@@ -161,17 +212,22 @@ function saveNotesToStorage() {
 }
 
 function loadNotesFromStorage() {
-  const rawNotes = localStorage.getItem("notes");
-  if (!rawNotes) return;
+    const rawNotes = localStorage.getItem("notes");
+    if (!rawNotes) return;
 
-  try {
-    notes = JSON.parse(rawNotes);
-  } catch (error) {
-    notes = [];
-    return;
-  }
+    try {
+        const parsed = JSON.parse(rawNotes);
+        if (!Array.isArray(parsed)) {
+            throw new Error("Invalid notes shape");
+        }
+        notes = parsed;
+    } catch (error) {
+        localStorage.removeItem("notes");
+        notes = [];
+        return;
+    }
 
-  if (notes.length === 0) return;
+    if (notes.length === 0) return;
 
   selectedNoteId = notes[0].id;
   renderNotes();
@@ -186,6 +242,7 @@ newNoteBtn.addEventListener("click", (event) => {
     isNewNoteDirty = false;
     titleInput.value = "";
     editor.innerHTML = "";
+    openMobileEditor();
     titleInput.focus();
     renderNotes();
     updateSaveButtonState();
@@ -205,6 +262,12 @@ if (deleteNoteBtn) {
   deleteNoteBtn.addEventListener("click", () => {
     if (!selectedNoteId) return;
     deleteSelectedNote();
+  });
+}
+
+if (closeEditorBtn) {
+  closeEditorBtn.addEventListener("click", () => {
+    closeMobileEditor();
   });
 }
 
@@ -279,6 +342,7 @@ function createNotePreview(note) {
         loadNoteIntoEditor();
         renderNotes();
         updateSaveButtonState();
+        openMobileEditor();
     });
 
     previewContainer.appendChild(noteEl);
@@ -295,6 +359,7 @@ function deleteSelectedNote() {
     selectedNoteId = null;
     titleInput.value = "";
     editor.innerHTML = "";
+    closeMobileEditor();
   } else {
     const nextIndex = Math.min(noteIndex, notes.length - 1);
     selectedNoteId = notes[nextIndex].id;
@@ -326,6 +391,14 @@ if (toolbar) {
       value = `<${value}>`;
     }
     editor.focus();
-    document.execCommand(command, false, value);
+    if (typeof document.execCommand === "function") {
+      try {
+        document.execCommand(command, false, value);
+      } catch (err) {
+        console.warn("Formatting command failed", err);
+      }
+    } else {
+      console.warn("Formatting not supported in this browser.");
+    }
   });
 }
