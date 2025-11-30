@@ -13,6 +13,7 @@ var selectedNoteId;
 var DAY_IN_MS = 24 * 60 * 60 * 1000;
 var titleInput = document.querySelector('#note-title input');
 var editor = document.querySelector('#editor');
+var toolbar = document.getElementById("editor-toolbar");
 var previewContainer = document.querySelector('#note-preview-container');
 var searchInput = document.querySelector('#note-search');
 var newNoteBtn = document.getElementById("new-note");
@@ -20,11 +21,18 @@ var saveNoteBtn = document.getElementById("save-note");
 var deleteNoteBtn = document.getElementById("delete-note");
 var isNewNoteDirty = false;
 
-function AddNote(title, text) {
+function getPlainTextFromHTML() {
+  var html = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
+  var temp = document.createElement("div");
+  temp.innerHTML = html;
+  return temp.textContent || temp.innerText || "";
+}
+
+function AddNote(title, html) {
   var newNote = {
     id: crypto.randomUUID(),
     title: title,
-    body: text,
+    body: html || "",
     lastEdited: Date.now()
   };
   notes.push(newNote);
@@ -114,7 +122,7 @@ function getFilteredNotes() {
   if (!query) return notes;
   return notes.filter(function (note) {
     var title = (note.title || "").toLowerCase();
-    var body = (note.body || "").toLowerCase();
+    var body = getPlainTextFromHTML(note.body).toLowerCase();
     return title.includes(query) || body.includes(query);
   });
 }
@@ -128,7 +136,7 @@ function renderNotes() {
     selectedNoteId = null;
     isNewNoteDirty = false;
     titleInput.value = "";
-    editor.textContent = "";
+    editor.innerHTML = "";
     updateSaveButtonState();
   }
 
@@ -140,8 +148,8 @@ function loadNoteIntoEditor() {
     return note.id === selectedNoteId;
   });
   if (!selectedNote) return;
-  titleInput.value = selectedNote.title;
-  editor.textContent = selectedNote.body;
+  titleInput.value = selectedNote.title || "";
+  editor.innerHTML = selectedNote.body || "";
 }
 
 function updateSaveButtonState() {
@@ -196,7 +204,7 @@ newNoteBtn.addEventListener("click", function (event) {
   selectedNoteId = null;
   isNewNoteDirty = false;
   titleInput.value = "";
-  editor.textContent = "";
+  editor.innerHTML = "";
   titleInput.focus();
   renderNotes();
   updateSaveButtonState();
@@ -204,7 +212,7 @@ newNoteBtn.addEventListener("click", function (event) {
 
 saveNoteBtn.addEventListener("click", function (event) {
   if (selectedNoteId != null || !isNewNoteDirty) return;
-  AddNote(titleInput.value, editor.textContent);
+  AddNote(titleInput.value, editor.innerHTML);
   updateSaveButtonState();
 }); //delete note button
 
@@ -245,7 +253,7 @@ editor.addEventListener("input", function () {
     return;
   }
 
-  note.body = editor.textContent;
+  note.body = editor.innerHTML;
   note.lastEdited = Date.now();
   saveNotesToStorage();
   renderNotes();
@@ -271,9 +279,13 @@ function createNotePreview(note) {
     day: "numeric",
     year: "numeric"
   });
+  var plainText = getPlainTextFromHTML(note.body);
+  var firstLine = (plainText.split(/\r?\n/).find(function (line) {
+    return line.trim() !== "";
+  }) || plainText || "").trim();
   var text = document.createElement("div");
   text.classList.add("text");
-  text.textContent = note.body;
+  text.textContent = firstLine;
   span.appendChild(time);
   span.appendChild(text);
   noteEl.appendChild(title);
@@ -299,7 +311,7 @@ function deleteSelectedNote() {
   if (notes.length === 0) {
     selectedNoteId = null;
     titleInput.value = "";
-    editor.textContent = "";
+    editor.innerHTML = "";
   } else {
     var nextIndex = Math.min(noteIndex, notes.length - 1);
     selectedNoteId = notes[nextIndex].id;
@@ -316,4 +328,21 @@ updateSaveButtonState();
 
 if (searchInput) {
   searchInput.addEventListener("input", renderNotes);
+}
+
+if (toolbar) {
+  toolbar.addEventListener("click", function (event) {
+    var button = event.target.closest("button");
+    if (!button) return;
+    var command = button.dataset.command;
+    if (!command) return;
+    var value = button.dataset.value || null;
+
+    if (command === "formatBlock" && value && !value.startsWith("<")) {
+      value = "<".concat(value, ">");
+    }
+
+    editor.focus();
+    document.execCommand(command, false, value);
+  });
 }

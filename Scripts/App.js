@@ -5,6 +5,7 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 const titleInput = document.querySelector('#note-title input');
 const editor = document.querySelector('#editor');
+const toolbar = document.getElementById("editor-toolbar");
 const previewContainer = document.querySelector('#note-preview-container');
 const searchInput = document.querySelector('#note-search');
 const newNoteBtn = document.getElementById("new-note");
@@ -12,11 +13,17 @@ const saveNoteBtn = document.getElementById("save-note");
 const deleteNoteBtn = document.getElementById("delete-note");
 let isNewNoteDirty = false;
 
-function AddNote(title, text){
+function getPlainTextFromHTML(html = "") {
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+    return temp.textContent || temp.innerText || "";
+}
+
+function AddNote(title, html){
     const newNote = {
         id: crypto.randomUUID(),  
         title: title,
-        body: text,
+        body: html || "",
         lastEdited: Date.now()
     };
 
@@ -102,7 +109,7 @@ function getFilteredNotes() {
 
   return notes.filter(note => {
     const title = (note.title || "").toLowerCase();
-    const body = (note.body || "").toLowerCase();
+    const body = getPlainTextFromHTML(note.body).toLowerCase();
     return title.includes(query) || body.includes(query);
   });
 }
@@ -113,7 +120,7 @@ function renderNotes() {
     selectedNoteId = null;
     isNewNoteDirty = false;
     titleInput.value = "";
-    editor.textContent = "";
+    editor.innerHTML = "";
     updateSaveButtonState();
   }
   UpdateNotePreviewList(filtered);
@@ -123,8 +130,8 @@ function loadNoteIntoEditor() {
   const selectedNote = notes.find(note => note.id === selectedNoteId);
   if (!selectedNote) return; 
 
-  titleInput.value = selectedNote.title;     
-  editor.textContent = selectedNote.body;    
+  titleInput.value = selectedNote.title || "";     
+  editor.innerHTML = selectedNote.body || "";    
 }
 
 function updateSaveButtonState() {
@@ -178,7 +185,7 @@ newNoteBtn.addEventListener("click", (event) => {
     selectedNoteId = null;
     isNewNoteDirty = false;
     titleInput.value = "";
-    editor.textContent = "";
+    editor.innerHTML = "";
     titleInput.focus();
     renderNotes();
     updateSaveButtonState();
@@ -189,7 +196,7 @@ newNoteBtn.addEventListener("click", (event) => {
 saveNoteBtn.addEventListener("click", (event) => {
     if (selectedNoteId != null || !isNewNoteDirty)
         return;
-    AddNote(titleInput.value, editor.textContent);
+    AddNote(titleInput.value, editor.innerHTML);
     updateSaveButtonState();
 });
 
@@ -226,7 +233,7 @@ editor.addEventListener("input", () => {
       return;
     }
 
-    note.body = editor.textContent;
+    note.body = editor.innerHTML;
     note.lastEdited = Date.now();
     saveNotesToStorage();
     renderNotes();
@@ -254,9 +261,11 @@ function createNotePreview(note) {
       year: "numeric"
     });
 
+    const plainText = getPlainTextFromHTML(note.body);
+    const firstLine = (plainText.split(/\r?\n/).find(line => line.trim() !== "") || plainText || "").trim();
     const text = document.createElement("div");
     text.classList.add("text");
-    text.textContent = note.body;
+    text.textContent = firstLine;
 
     span.appendChild(time);
     span.appendChild(text);
@@ -285,7 +294,7 @@ function deleteSelectedNote() {
   if (notes.length === 0) {
     selectedNoteId = null;
     titleInput.value = "";
-    editor.textContent = "";
+    editor.innerHTML = "";
   } else {
     const nextIndex = Math.min(noteIndex, notes.length - 1);
     selectedNoteId = notes[nextIndex].id;
@@ -302,4 +311,21 @@ updateSaveButtonState();
 
 if (searchInput) {
   searchInput.addEventListener("input", renderNotes);
+}
+
+if (toolbar) {
+  toolbar.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+
+    const command = button.dataset.command;
+    if (!command) return;
+
+    let value = button.dataset.value || null;
+    if (command === "formatBlock" && value && !value.startsWith("<")) {
+      value = `<${value}>`;
+    }
+    editor.focus();
+    document.execCommand(command, false, value);
+  });
 }

@@ -37,6 +37,15 @@
           <div id="note-title">
             <input type="text" name="" id="" placeholder="Note title..." />
           </div>
+          <div id="editor-toolbar" aria-label="Text formatting toolbar">
+            <button type="button" data-command="bold" title="Bold (Ctrl+B)">B</button>
+            <button type="button" data-command="italic" title="Italic (Ctrl+I)">I</button>
+            <button type="button" data-command="underline" title="Underline (Ctrl+U)">U</button>
+            <button type="button" data-command="insertUnorderedList" title="Bullet list">• List</button>
+            <button type="button" data-command="insertOrderedList" title="Numbered list">1. List</button>
+            <button type="button" data-command="formatBlock" data-value="blockquote" title="Quote">❝ ❞</button>
+            <button type="button" data-command="removeFormat" title="Clear formatting">Clear</button>
+          </div>
           <div contenteditable="true" id="editor"></div>
         </section>
       </div>
